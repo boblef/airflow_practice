@@ -1,18 +1,21 @@
+# Practice Airflow
 
-# Homework2 outlines
 ![airflow-logo](https://user-images.githubusercontent.com/44624585/61552718-6fe3af00-aa0d-11e9-8563-45253ed5e4c6.jpeg)
 
 #### Task:
+
 Create a data pipeline using Airflow that perform ETL jobs to extract data and put into a storage of your choice.
 
 #### What I created
+
 1. Scrape headlines of top news from [CBC](https://www.cbc.ca/news/canada)
 2. Store them into a csv file with.
 
 #### Table of contents
+
 - Talk about more details of what I created.
-    - Scraping
-    - Writing CSV file
+  - Scraping
+  - Writing CSV file
 - Look at the code.
 - How to use.
 - Import csv to Pandas Dataframe
@@ -22,8 +25,9 @@ Create a data pipeline using Airflow that perform ETL jobs to extract data and p
 ## Talk about more details of what I created.
 
 ### Scraping
+
 First of all, what it does is scrape the headlines of top news on [CBC](https://www.cbc.ca/news/canada) using [BeautifulSoap](https://www.crummy.com/software/BeautifulSoup/bs4/doc/), which is a Python library for web scraping.<br>
-This is the top page of CBC at that time I am creating this Notebook, let's have a look at the headline of the left news where you can see Japanese flag. 
+This is the top page of CBC at that time I am creating this Notebook, let's have a look at the headline of the left news where you can see Japanese flag.
 <img width="1435" alt="ss1" src="https://user-images.githubusercontent.com/44624585/61552759-8e49aa80-aa0d-11e9-92a6-2c1518fd4a56.png">
 <br>
 <br>
@@ -33,6 +37,7 @@ This is an example of headlines.<br>
 **This is a headline I am going to get.** On this website, every headline of news is inside of `<h3>` tag.
 
 So we first scrape all of the text inside of `<h3>` tags on the top page but we need pay attention to things scraped.
+
 ```
 avoid_words = ["My Local",
               "Editor's Blog",
@@ -41,12 +46,14 @@ avoid_words = ["My Local",
               "Services & Info",
               "Accessibility"]
 ```
+
 I created this list that contains words that the python script scrapes because those are also inside of `<h3>` tags but we don't want to write them into csv file.
 In the picture below, you can find some of the words such as `Connect with CBC`, `Contact CBC`, etc.
 <img width="1433" alt="ss3" src="https://user-images.githubusercontent.com/44624585/61552970-1465f100-aa0e-11e9-97a6-ae5deecbfb51.png">
 <br>
 <br>
 After scraping the headlines, it creates a 2 dimensional list that contains information below.
+
 1. Headlines which we just scraped
 2. Source url: where did we scrape from. (https://www.cbc.ca/news/canada)
 3. Datetime
@@ -54,6 +61,7 @@ After scraping the headlines, it creates a 2 dimensional list that contains info
 The reason why we create 2 dimensional list instead of 1 dimension is that it is convenient when we write them into csv file.
 
 This list below is an example:<br>
+
 ```
 list_example = [["Headline1", "https://www.cbc.ca/news/canada", "2019-07-16 15:29:00"],
               ["Headline2", "https://www.cbc.ca/news/canada", "2019-07-16 15:29:00"],
@@ -62,7 +70,6 @@ list_example = [["Headline1", "https://www.cbc.ca/news/canada", "2019-07-16 15:2
               :
               ["HeadlineN", "https://www.cbc.ca/news/canada", "2019-07-16" 15:29:00]]
 ```
-
 
 ```python
 def get_news_from_cbc(url):
@@ -109,16 +116,17 @@ def get_news_from_cbc(url):
 ```
 
 ### Writing CSV file
+
 Now we have a list that some headlines of news on CBC. The next things we will do is to write them into csv file. So I created a function but **how do we pass variables to functions in Airflow**.
 In order to pass variables to a function in Airflow, we need to use [Xcoms](https://airflow.apache.org/concepts.html#xcoms).
 
 #### Xcoms
+
 XComs, or short for "cross communication" are stores of key, value, and timestamps meant to communicate between tasks. XComs are stored in Airflow's metadata database with an associated execution_date, TaskInstance and DagRun.
 
 XComs can be `"pushed"` or `"pulled"` by all TaskInstances (by using `xcom_push()` or `xcom_pull()`, respectively).
 
 When we use `return` in a function, it automatically does `push` so that I didn't use `xcom_push()` in this script. But inside of `write_csv()` function, which I created, I used `xcom_pull()` to get the list which we just created and which has the headlines, urls, and datetime.
-
 
 ```python
 def write_csv(**kwargs):
@@ -148,9 +156,9 @@ def write_csv(**kwargs):
 ```
 
 ## Look at the code
+
 First of all, I will provide you the whole code, and basically, you can use this code by just copy and paste.
 But we will take a look at each code later on.
-
 
 ```python
 import requests
@@ -325,11 +333,13 @@ task1 >> task2 >> task3 >> task4
 ```
 
 ## How to use
+
 1. Create a new python file by copy and past the above whole code.
 2. Put the file into your `dags` folder.
 3. Run `airflow scheduler` which will add the new dag to your dags list.
 
 #### If you want to run it in Terminal
+
 1. check the dags list: `airflow list_dags`
 2. Run `airflow test hw2 echo1 2019-07-16`, where will run `echo1` task.
 3. Run `airflow test hw2 scraping 2019-07-16`, where will run `scraping` task.
@@ -338,30 +348,23 @@ task1 >> task2 >> task3 >> task4
 
 ## Import csv to Pandas dataframe
 
-
 ```python
 from pathlib import Path
 import pandas as pd
 ```
 
-
 ```python
 csv_path = Path("../data/index.csv")
 ```
-
 
 ```python
 cols = ["head_lines", "source", "date"]
 df = pd.read_csv(str(csv_path), names=cols)
 ```
 
-
 ```python
 df.head()
 ```
-
-
-
 
 <div>
 <style scoped>
@@ -376,6 +379,7 @@ df.head()
     .dataframe thead th {
         text-align: right;
     }
+
 </style>
 <table border="1" class="dataframe">
   <thead>
@@ -421,24 +425,18 @@ df.head()
 </table>
 </div>
 
-
-
-
 ```python
 df.shape
 ```
 
-
-
-
     (66, 3)
 
-
-
 ## What can we do with this
+
 We can apply a text classification model to classify headlines to categories such as `sport`, `economics`, etc, and create a new `category` column to keep classified categories so that we can use the data for different purposes.
 
 ## Resources
+
 - [Airflow tutorial](https://airflow.apache.org/tutorial.html)
 - [CBC](https://www.cbc.ca/news/canada)
 - [Using Airflow Datastores](https://www.astronomer.io/guides/airflow-datastores/)
